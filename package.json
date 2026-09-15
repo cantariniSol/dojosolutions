@@ -1,0 +1,17 @@
+{
+  "name": "dojosolutions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Checklist-driven delivery baseline for DojoSolutions.",
+  "scripts": {
+    "build": "npm run build --prefix frontend && npm run build --prefix backend && rm -rf backend/public && mkdir -p backend/public && cp -R frontend/dist/. backend/public/",
+    "start": "npm run start --prefix backend",
+    "test": "npm run test --prefix backend",
+    "test:unit": "npm run test:unit --prefix backend",
+    "test:integration": "npm run test:integration --prefix backend",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

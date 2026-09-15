@@ -1,0 +1,5 @@
+bucket         = "replace-with-state-bucket"
+key            = "dojosolutions/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "replace-with-lock-table"
+encrypt        = true
