@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { checklistItems } = require('./checklist');
 const { metricsRegistry, observeRequestDuration, incrementEvidenceCounter } = require('./metrics');
 const { buildChecklistSummary } = require('./summary');
@@ -70,8 +71,15 @@ function createApp({ evidenceRepository, mongoReady = () => false, staticDir = p
   });
 
   if (fs.existsSync(staticDir)) {
+    const documentLimiter = rateLimit({
+      windowMs: 60 * 1000,
+      limit: 120,
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
     app.use(express.static(staticDir));
-    app.get(/^(?!\/api|\/metrics).*/, (req, res) => {
+    app.get(/^(?!\/api|\/metrics).*/, documentLimiter, (req, res) => {
       res.sendFile(path.join(staticDir, 'index.html'));
     });
   }
