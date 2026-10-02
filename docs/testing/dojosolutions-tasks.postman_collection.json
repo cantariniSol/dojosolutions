@@ -1,0 +1,262 @@
+{
+  "info": {
+    "name": "DojoSolutions - Tasks API",
+    "description": "Colección para probar la API de tareas (health check + CRUD completo) contra la base de datos real.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/api", "type": "string" },
+    { "key": "taskId", "value": "", "type": "string" },
+    { "key": "nonExistentId", "value": "64b000000000000000000000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', () => pm.response.to.have.status(200));",
+              "pm.test('Responde status ok', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('ok');",
+              "  pm.expect(body.timestamp).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crear tarea",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Tarea de prueba Postman\",\n  \"description\": \"Creada desde la colección de Postman\",\n  \"status\": \"pending\",\n  \"priority\": \"high\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/tasks", "host": ["{{baseUrl}}"], "path": ["tasks"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('Devuelve la tarea creada con id', () => {",
+              "  pm.expect(body.id).to.be.a('string');",
+              "  pm.expect(body.title).to.eql('Tarea de prueba Postman');",
+              "  pm.expect(body.status).to.eql('pending');",
+              "  pm.expect(body.priority).to.eql('high');",
+              "});",
+              "pm.collectionVariables.set('taskId', body.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crear tarea inválida (sin título)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Falta el título obligatorio\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/tasks", "host": ["{{baseUrl}}"], "path": ["tasks"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 400', () => pm.response.to.have.status(400));",
+              "pm.test('Devuelve mensaje de validación', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.message).to.eql('Datos inválidos');",
+              "  pm.expect(body.errors).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listar tareas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tasks", "host": ["{{baseUrl}}"], "path": ["tasks"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', () => pm.response.to.have.status(200));",
+              "pm.test('Devuelve un array e incluye la tarea creada', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.be.an('array');",
+              "  const taskId = pm.collectionVariables.get('taskId');",
+              "  const found = body.some((task) => task.id === taskId);",
+              "  pm.expect(found).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Obtener tarea por id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', () => pm.response.to.have.status(200));",
+              "pm.test('Devuelve la tarea correcta', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.id).to.eql(pm.collectionVariables.get('taskId'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Actualizar tarea",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\",\n  \"priority\": \"medium\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 200', () => pm.response.to.have.status(200));",
+              "pm.test('Refleja los cambios en la base de datos', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('in_progress');",
+              "  pm.expect(body.priority).to.eql('medium');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Obtener tarea inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{nonExistentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{nonExistentId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 404', () => pm.response.to.have.status(404));",
+              "pm.test('Mensaje indica que no se encontró', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.message).to.eql('Tarea no encontrado');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Obtener tarea con id inválido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tasks/id-invalido", "host": ["{{baseUrl}}"], "path": ["tasks", "id-invalido"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 400', () => pm.response.to.have.status(400));",
+              "pm.test('Devuelve error de validación de formato', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.message).to.eql('Datos inválidos');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eliminar tarea",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verificar que la tarea fue borrada de la base",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/tasks/{{taskId}}", "host": ["{{baseUrl}}"], "path": ["tasks", "{{taskId}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code es 404 tras el borrado', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
