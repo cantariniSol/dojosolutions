@@ -55,14 +55,14 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build imagen backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./application/backend
           target: production
           push: false
 
       - name: Build imagen frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./application/frontend
           target: production
